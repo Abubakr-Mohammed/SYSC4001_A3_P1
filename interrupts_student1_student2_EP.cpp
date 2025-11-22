@@ -1,118 +1,200 @@
 /**
  * @file interrupts.cpp
  * @author Sasisekhar Govind
+ * Abubakr Mohammed(101287262) Chikezilim Afulukwe (101279214)
  * @brief template main.cpp file for Assignment 3 Part 1 of SYSC4001
  * 
  */
+#include <interrupts_student1_student2.hpp>
 
-#include<interrupts_student1_student2.hpp>
+/******************************* MEMORY REPORT *******************************/
+static std::string memory_report() {
+    unsigned used_mem = 0;
+    unsigned free_mem = 0;
+    unsigned usable_mem = 0;
 
-void FCFS(std::vector<PCB> &ready_queue) {
-    std::sort( 
-                ready_queue.begin(),
-                ready_queue.end(),
-                []( const PCB &first, const PCB &second ){
-                    return (first.arrival_time > second.arrival_time); 
-                } 
-            );
+    std::stringstream out;
+
+    out << "\nMEMORY STATUS:\n";
+
+    // ------------------ USED PARTITIONS ------------------
+    out << "Used Partitions: ";
+    bool anyUsed = false;
+
+    for (int i = 0; i < 6; i++) {
+        if (memory_paritions[i].occupied != -1) {
+            used_mem += memory_paritions[i].size;
+            anyUsed = true;
+            out << "[P" << memory_paritions[i].partition_number
+                << " size=" << memory_paritions[i].size
+                << " pid=" << memory_paritions[i].occupied << "] ";
+        }
+    }
+    if (!anyUsed) out << "(none)";
+
+    // ------------------ FREE PARTITIONS ------------------
+    out << "\nFree Partitions: ";
+    bool anyFree = false;
+
+    for (int i = 0; i < 6; i++) {
+        if (memory_paritions[i].occupied == -1) {
+            free_mem += memory_paritions[i].size;
+            usable_mem += memory_paritions[i].size;
+            anyFree = true;
+            out << "[P" << memory_paritions[i].partition_number
+                << " size=" << memory_paritions[i].size << "] ";
+        }
+    }
+    if (!anyFree) out << "(none)";
+
+    // ------------------ MEMORY TOTALS ------------------
+    out << "\nTotal Memory Used: " << used_mem;
+    out << "\nTotal Free Memory: " << free_mem;
+    out << "\nUsable Memory: " << usable_mem;
+    out << "\n\n";
+
+    return out.str();
 }
 
-std::tuple<std::string /* add std::string for bonus mark */ > run_simulation(std::vector<PCB> list_processes) {
+/***************************** RESET MEMORY TABLE *****************************/
+void reset_memory() {
+    for (int i = 0; i < 6; i++) memory_paritions[i].occupied = -1;
+}
 
-    std::vector<PCB> ready_queue;   //The ready queue of processes
-    std::vector<PCB> wait_queue;    //The wait queue of processes
-    std::vector<PCB> job_list;      //A list to keep track of all the processes. This is similar
-                                    //to the "Process, Arrival time, Burst time" table that you
-                                    //see in questions. You don't need to use it, I put it here
-                                    //to make the code easier :).
+/**************************** PRIORITY COMPARATOR ****************************/
+static void EP_sort(std::vector<PCB> &rq) {
+    std::sort(rq.begin(), rq.end(), [](const PCB &a, const PCB &b) {
+        if (a.priority == b.priority)
+            return a.arrival_time > b.arrival_time;
+        return a.priority > b.priority; // smaller size = higher priority
+    });
+}
 
-    unsigned int current_time = 0;
+/******************************* SIMULATION LOOP ******************************/
+std::tuple<std::string> run_simulation(std::vector<PCB> list) {
+    reset_memory();
+
+    std::vector<PCB> ready, waitq, job;
     PCB running;
-
-    //Initialize an empty running process
     idle_CPU(running);
 
-    std::string execution_status;
+    unsigned int t = 0;
+    std::string out = print_exec_header();
 
-    //make the output table (the header row)
-    execution_status = print_exec_header();
+    for (auto &p : list) p.priority = p.size;
 
-    //Loop while till there are no ready or waiting processes.
-    //This is the main reason I have job_list, you don't have to use it.
-    while(!all_process_terminated(job_list) || job_list.empty()) {
+    while (true) {
 
-        //Inside this loop, there are three things you must do:
-        // 1) Populate the ready queue with processes as they arrive
-        // 2) Manage the wait queue
-        // 3) Schedule processes from the ready queue
+        bool all_arrived = true;
+        for (auto &p : list)
+            if (p.state == NOT_ASSIGNED) all_arrived = false;
 
-        //Population of ready queue is given to you as an example.
-        //Go through the list of proceeses
-        for(auto &process : list_processes) {
-            if(process.arrival_time == current_time) {//check if the AT = current time
-                //if so, assign memory and put the process into the ready queue
-                assign_memory(process);
+        bool all_done = (!job.empty() && all_process_terminated(job));
 
-                process.state = READY;  //Set the process state to READY
-                ready_queue.push_back(process); //Add the process to the ready queue
-                job_list.push_back(process); //Add it to the list of processes
+        if (all_arrived && all_done) break;
+        if (t > 500000) break;
 
-                execution_status += print_exec_status(current_time, process.PID, NEW, READY);
+        // ------------------ ARRIVALS ------------------
+        for (auto &p : list) {
+            if (p.state == NOT_ASSIGNED && p.arrival_time == t) {
+                if (assign_memory(p)) {
+                    p.state = READY;
+                    ready.push_back(p);
+                    job.push_back(p);
+                    out += print_exec_status(t, p.PID, NEW, READY);
+                }
             }
         }
 
-        ///////////////////////MANAGE WAIT QUEUE/////////////////////////
-        //This mainly involves keeping track of how long a process must remain in the ready queue
+        // ------------------ I/O ------------------
+        for (auto &p : waitq) p.io_duration--;
 
-        /////////////////////////////////////////////////////////////////
+        waitq.erase(std::remove_if(waitq.begin(), waitq.end(),
+            [&](PCB &p) {
+                if (p.io_duration <= 0) {
+                    p.state = READY;
+                    ready.push_back(p);
+                    out += print_exec_status(t, p.PID, WAITING, READY);
+                    sync_queue(job, p);
+                    return true;
+                }
+                return false;
+            }),
+        waitq.end());
 
-        //////////////////////////SCHEDULER//////////////////////////////
-        FCFS(ready_queue); //example of FCFS is shown here
-        /////////////////////////////////////////////////////////////////
+        // ------------------ DISPATCH ------------------
+        if (running.state != RUNNING) {
+            if (!ready.empty()) {
+                EP_sort(ready);
+                PCB nx = ready.back();
+                ready.pop_back();
 
+                nx.state = RUNNING;
+                if (nx.start_time == -1) nx.start_time = t;
+
+                out += print_exec_status(t, nx.PID, READY, RUNNING);
+                out += memory_report();
+
+                running = nx;
+                sync_queue(job, running);
+            }
+        }
+        else {
+            running.remaining_time--;
+            sync_queue(job, running);
+
+            bool needIO = false;
+            if (running.io_freq > 0 && running.remaining_time > 0) {
+                unsigned executed = running.processing_time - running.remaining_time;
+                if (executed % running.io_freq == 0)
+                    needIO = true;
+            }
+
+            if (needIO) {
+                PCB io = running;
+                io.state = WAITING;
+                io.io_duration = running.io_duration;
+                waitq.push_back(io);
+
+                out += print_exec_status(t, running.PID, RUNNING, WAITING);
+                sync_queue(job, io);
+                idle_CPU(running);
+            }
+            else if (running.remaining_time == 0) {
+                out += print_exec_status(t, running.PID, RUNNING, TERMINATED);
+                terminate_process(running, job);
+                idle_CPU(running);
+            }
+        }
+
+        t++;
     }
-    
-    //Close the output table
-    execution_status += print_exec_footer();
 
-    return std::make_tuple(execution_status);
+    out += print_exec_footer();
+    return std::make_tuple(out);
 }
 
-
-int main(int argc, char** argv) {
-
-    //Get the input file from the user
-    if(argc != 2) {
-        std::cout << "ERROR!\nExpected 1 argument, received " << argc - 1 << std::endl;
-        std::cout << "To run the program, do: ./interrutps <your_input_file.txt>" << std::endl;
+/************************************* MAIN ***********************************/
+int main(int argc, char **argv) {
+    if (argc != 2) {
+        std::cout << "ERROR: Usage ./interrupts_EP <inputfile>" << std::endl;
         return -1;
     }
 
-    //Open the input file
-    auto file_name = argv[1];
-    std::ifstream input_file;
-    input_file.open(file_name);
+    std::ifstream in(argv[1]);
+    if (!in.is_open()) return -1;
 
-    //Ensure that the file actually opens
-    if (!input_file.is_open()) {
-        std::cerr << "Error: Unable to open file: " << file_name << std::endl;
-        return -1;
-    }
-
-    //Parse the entire input file and populate a vector of PCBs.
-    //To do so, the add_process() helper function is used (see include file).
+    std::vector<PCB> list;
     std::string line;
-    std::vector<PCB> list_process;
-    while(std::getline(input_file, line)) {
-        auto input_tokens = split_delim(line, ", ");
-        auto new_process = add_process(input_tokens);
-        list_process.push_back(new_process);
+
+    while (std::getline(in, line)) {
+        auto tok = split_delim(line, ", ");
+        PCB p = add_process(tok);
+        p.priority = p.size;
+        list.push_back(p);
     }
-    input_file.close();
 
-    //With the list of processes, run the simulation
-    auto [exec] = run_simulation(list_process);
-
+    auto [exec] = run_simulation(list);
     write_output(exec, "execution.txt");
 
     return 0;
