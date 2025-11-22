@@ -1,6 +1,7 @@
 /**
- * @file interrupts.hpp
+ * @file interrupts.cpp
  * @author Sasisekhar Govind
+ * Abubakr Mohammed(101287262) Chikezilim Afulukwe (101279214)
  * @brief template main.cpp file for Assignment 3 Part 1 of SYSC4001
  * 
  */
@@ -65,6 +66,7 @@ struct PCB{
     enum states     state;
     unsigned int    io_freq;
     unsigned int    io_duration;
+    unsigned int    priority; //for bonus mark
 };
 
 //------------------------------------HELPER FUNCTIONS FOR THE SIMULATOR------------------------------
