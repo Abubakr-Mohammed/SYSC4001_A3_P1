@@ -1,0 +1,48 @@
++------------------------------------------------+
+|Time of Transition |PID | Old State | New State |
++------------------------------------------------+
+|                 0 |  1 |       NEW |     READY |
+|                 0 |  1 |     READY |   RUNNING |
+
+MEMORY STATUS:
+Used Partitions: [P2 size=25 pid=1] 
+Free Partitions: [P1 size=40] [P3 size=15] [P4 size=10] [P5 size=8] [P6 size=2] 
+Total Memory Used: 25
+Total Free Memory: 75
+Usable Memory: 75
+
+|                 5 |  2 |       NEW |     READY |
+|                10 |  3 |       NEW |     READY |
+|                15 |  4 |       NEW |     READY |
+|               400 |  1 |   RUNNING |TERMINATED |
+|               401 |  2 |     READY |   RUNNING |
+
+MEMORY STATUS:
+Used Partitions: [P3 size=15 pid=4] [P4 size=10 pid=3] [P5 size=8 pid=2] 
+Free Partitions: [P1 size=40] [P2 size=25] [P6 size=2] 
+Total Memory Used: 33
+Total Free Memory: 67
+Usable Memory: 67
+
+|               481 |  2 |   RUNNING |TERMINATED |
+|               482 |  3 |     READY |   RUNNING |
+
+MEMORY STATUS:
+Used Partitions: [P3 size=15 pid=4] [P4 size=10 pid=3] 
+Free Partitions: [P1 size=40] [P2 size=25] [P5 size=8] [P6 size=2] 
+Total Memory Used: 25
+Total Free Memory: 75
+Usable Memory: 75
+
+|               562 |  3 |   RUNNING |TERMINATED |
+|               563 |  4 |     READY |   RUNNING |
+
+MEMORY STATUS:
+Used Partitions: [P3 size=15 pid=4] 
+Free Partitions: [P1 size=40] [P2 size=25] [P4 size=10] [P5 size=8] [P6 size=2] 
+Total Memory Used: 15
+Total Free Memory: 85
+Usable Memory: 85
+
+|               643 |  4 |   RUNNING |TERMINATED |
++------------------------------------------------+
