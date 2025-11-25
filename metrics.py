@@ -1,5 +1,6 @@
 #Abubakr Mohammed(101287262) & Chikezilim Afulukwe(101279214)
-
+# Program used to calculate the different metrics based on the simulation results:
+# Throughput, Average Wait Time, Average Turnaround time and Average Response Time 
 import re
 from collections import defaultdict
 
