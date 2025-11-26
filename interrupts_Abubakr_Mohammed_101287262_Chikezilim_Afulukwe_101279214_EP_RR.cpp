@@ -10,7 +10,7 @@
 
 static const unsigned int QUANTUM = 100;
 
-/******************************* MEMORY REPORT *******************************/
+/* MEMORY REPORT */
 static std::string memory_report() {
     unsigned used_mem = 0, free_mem = 0, usable_mem = 0;
     std::stringstream out;
@@ -51,21 +51,25 @@ static std::string memory_report() {
     return out.str();
 }
 
-/***************************** RESET MEMORY *****************************/
+/* RESET MEMORY */
 void reset_memory() {
     for (int i = 0; i < 6; i++) memory_paritions[i].occupied = -1;
 }
 
-/***************************** PRIORITY SORT *****************************/
+/*PRIORITY SORT */
 static void EP_sort(std::vector<PCB> &rq) {
     std::sort(rq.begin(), rq.end(), [](const PCB &a, const PCB &b) {
-        if (a.size == b.size)
-            return a.arrival_time > b.arrival_time;  
-        return a.size > b.size; // smaller size = higher priority
+
+        // LOWER PID = HIGHER PRIORITY
+        if (a.priority != b.priority)
+            return a.priority < b.priority;
+
+        // tie-breaker: earlier arrival takes priority
+        return a.arrival_time < b.arrival_time;
     });
 }
 
-/***************************** EP + RR SCHEDULER *****************************/
+/*EP + RR SCHEDULER */
 std::tuple<std::string> run_simulation(std::vector<PCB> list) {
 
     reset_memory();
@@ -90,7 +94,7 @@ std::tuple<std::string> run_simulation(std::vector<PCB> list) {
         if (all_arrived && all_done) break;
         if (t > 500000) break;
 
-        /******************* ARRIVALS *******************/
+        /* ARRIVALS */
         for (auto &p : list) {
             if (p.state == NOT_ASSIGNED && p.arrival_time == t) {
 
@@ -108,7 +112,7 @@ std::tuple<std::string> run_simulation(std::vector<PCB> list) {
             }
         }
 
-        /******************* MEMORY WAIT RETRY *******************/
+        /* MEMORY WAIT RETRY */
         for (int i = 0; i < memwait.size();) {
             if (assign_memory(memwait[i])) {
                 PCB p = memwait[i];
@@ -124,7 +128,7 @@ std::tuple<std::string> run_simulation(std::vector<PCB> list) {
             } else i++;
         }
 
-        /******************* I/O COMPLETION *******************/
+        /*I/O COMPLETION */
         for (auto &p : waitq) p.io_duration--;
 
         waitq.erase(std::remove_if(waitq.begin(), waitq.end(),
@@ -142,11 +146,11 @@ std::tuple<std::string> run_simulation(std::vector<PCB> list) {
             }),
         waitq.end());
 
-        /******************* PRIORITY SORT READY QUEUE *******************/
+        /* PRIORITY SORT READY QUEUE */
         if (!ready.empty()) 
             EP_sort(ready);
 
-        /******************* CHECK FOR PRIORITY PREEMPTION *******************/
+        /* CHECK FOR PRIORITY PREEMPTION */
         bool preempt_for_priority = false;
 
         if (running.state == RUNNING && !ready.empty()) {
@@ -157,7 +161,7 @@ std::tuple<std::string> run_simulation(std::vector<PCB> list) {
             }
         }
 
-        /******************* DISPATCH OR PREEMPT *******************/
+        /* DISPATCH OR PREEMPT */
         if (running.state != RUNNING || preempt_for_priority) {
 
             if (running.state == RUNNING && preempt_for_priority) {
@@ -195,7 +199,7 @@ std::tuple<std::string> run_simulation(std::vector<PCB> list) {
             }
         }
 
-        /******************* EXECUTION *******************/
+        /* EXECUTION */
         else if (running.state == RUNNING) {
 
             running.remaining_time--;
@@ -256,7 +260,7 @@ std::tuple<std::string> run_simulation(std::vector<PCB> list) {
     return std::make_tuple(out);
 }
 
-/************************************* MAIN ***********************************/
+/* MAIN */
 int main(int argc, char **argv) {
     if (argc != 2) {
         std::cout << "ERROR: Usage ./interrupts_EP_RR <inputfile>\n";
