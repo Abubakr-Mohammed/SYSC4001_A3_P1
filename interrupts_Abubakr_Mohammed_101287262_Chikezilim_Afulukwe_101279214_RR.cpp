@@ -11,7 +11,7 @@
 // Quantum for Round Robin
 static const unsigned int QUANTUM = 100;
 
-/******************************* MEMORY REPORT *******************************/
+/* MEMORY REPORT */
 static std::string memory_report() {
     unsigned used_mem = 0, free_mem = 0, usable_mem = 0;
     std::stringstream out;
@@ -52,12 +52,12 @@ static std::string memory_report() {
     return out.str();
 }
 
-/***************************** RESET MEMORY *****************************/
+/* RESET MEMORY */
 void reset_memory() {
     for (int i = 0; i < 6; i++) memory_paritions[i].occupied = -1;
 }
 
-/***************************** RR SCHEDULER *****************************/
+/* RR SCHEDULER */
 std::tuple<std::string> run_simulation(std::vector<PCB> list) {
 
     reset_memory();
@@ -88,7 +88,7 @@ std::tuple<std::string> run_simulation(std::vector<PCB> list) {
 
         if (t > 500000) break;
 
-        /********************* ARRIVALS *********************/
+        /*ARRIVALS */
         for (auto &p : list) {
             if (p.state == NOT_ASSIGNED && p.arrival_time == t) {
 
@@ -106,7 +106,7 @@ std::tuple<std::string> run_simulation(std::vector<PCB> list) {
             }
         }
 
-        /********************* MEMORY-WAIT RETRIES *********************/
+        /*MEMORY-WAIT RETRIES */
         for (int i = 0; i < memwait.size();) {
             if (assign_memory(memwait[i])) {
                 PCB p = memwait[i];
@@ -122,7 +122,7 @@ std::tuple<std::string> run_simulation(std::vector<PCB> list) {
             else i++;
         }
 
-        /********************* I/O COMPLETION *********************/
+        /*I/O COMPLETION */
         for (auto &p : waitq) p.io_duration--;
 
         waitq.erase(std::remove_if(waitq.begin(), waitq.end(),
@@ -143,7 +143,7 @@ std::tuple<std::string> run_simulation(std::vector<PCB> list) {
             }),
             waitq.end());
 
-        /********************* DISPATCH *********************/
+        /* DISPATCH */
         if (running.state != RUNNING) {
 
             if (!ready.empty()) {
@@ -171,7 +171,7 @@ std::tuple<std::string> run_simulation(std::vector<PCB> list) {
             }
         }
 
-        /********************* RUNNING PROCESS *********************/
+        /* RUNNING PROCESS */
         else {
 
             running.remaining_time--;
@@ -188,7 +188,7 @@ std::tuple<std::string> run_simulation(std::vector<PCB> list) {
                     needIO = true;
             }
 
-            /*************** I/O INTERRUPT ***************/
+            /* I/O INTERRUPT */
             if (needIO) {
                 PCB io = running;
                 io.state = WAITING;
@@ -204,7 +204,7 @@ std::tuple<std::string> run_simulation(std::vector<PCB> list) {
                 idle_CPU(running);
             }
 
-            /*************** TERMINATION ***************/
+            /* TERMINATION */
             else if (running.remaining_time == 0) {
 
                 out += print_exec_status(t, running.PID, RUNNING, TERMINATED);
@@ -215,7 +215,7 @@ std::tuple<std::string> run_simulation(std::vector<PCB> list) {
                 idle_CPU(running);
             }
 
-            /*************** QUANTUM EXPIRED ***************/
+            /* QUANTUM EXPIRED */
             else if (quantum_used >= QUANTUM) {
 
                 PCB preempt = running;
@@ -239,7 +239,7 @@ std::tuple<std::string> run_simulation(std::vector<PCB> list) {
     return std::make_tuple(out);
 }
 
-/************************************* MAIN ***********************************/
+/* MAIN */
 int main(int argc, char **argv) {
     if (argc != 2) {
         std::cout << "ERROR: Usage ./interrupts_RR <inputfile>\n";
