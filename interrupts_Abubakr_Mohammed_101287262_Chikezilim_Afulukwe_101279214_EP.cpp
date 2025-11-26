@@ -8,7 +8,7 @@
 
 #include <interrupts_student1_student2.hpp>
 
-/******************************* MEMORY REPORT *******************************/
+/*MEMORY REPORT*/
 static std::string memory_report() {
     unsigned used_mem = 0;
     unsigned free_mem = 0;
@@ -54,7 +54,7 @@ static std::string memory_report() {
     return out.str();
 }
 
-/***************************** RESET MEMORY TABLE *****************************/
+/* RESET MEMORY TABLE */
 void reset_memory() {
     for (int i = 0; i < 6; i++) memory_paritions[i].occupied = -1;
 }
@@ -72,7 +72,7 @@ static void EP_sort(std::vector<PCB> &rq) {
     });
 }
 
-/******************************* SIMULATION LOOP ******************************/
+/* SIMULATION LOOP */
 std::tuple<std::string> run_simulation(std::vector<PCB> list) {
 
     reset_memory();
@@ -87,7 +87,7 @@ std::tuple<std::string> run_simulation(std::vector<PCB> list) {
 
     while (true) {
 
-        // ----------- CHECK ARRIVALS + SET PRIORITY -----------
+        /* Check arrivals and set priority*/
         bool all_arrived = true;
 
         for (auto &p : list) {
@@ -105,7 +105,7 @@ std::tuple<std::string> run_simulation(std::vector<PCB> list) {
         if (t > 500000)
             break;
 
-        // ------------------ ARRIVALS ------------------
+        /*Arrivals*/
         for (auto &p : list) {
 
             if (p.state == NOT_ASSIGNED && p.arrival_time == t) {
@@ -121,7 +121,7 @@ std::tuple<std::string> run_simulation(std::vector<PCB> list) {
             }
         }
 
-        // ------------------ I/O COMPLETION ------------------
+        /*I/O Completion*/
         for (auto &p : waitq) p.io_duration--;
 
         waitq.erase(std::remove_if(waitq.begin(), waitq.end(),
@@ -142,7 +142,7 @@ std::tuple<std::string> run_simulation(std::vector<PCB> list) {
             }),
         waitq.end());
 
-        // ------------------ DISPATCH ------------------
+        /* Schedule Dispatcher */
         if (running.state != RUNNING) {
 
             if (!ready.empty()) {
@@ -171,7 +171,7 @@ std::tuple<std::string> run_simulation(std::vector<PCB> list) {
             }
         }
 
-        // ------------------ RUNNING PROCESS ------------------
+        /* Run Processes */
         else {
 
             running.remaining_time--;
@@ -224,7 +224,7 @@ std::tuple<std::string> run_simulation(std::vector<PCB> list) {
     return std::make_tuple(out);
 }
 
-/************************************* MAIN ***********************************/
+/* MAIN */
 int main(int argc, char **argv) {
 
     if (argc != 2) {
