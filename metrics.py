@@ -6,9 +6,6 @@ from collections import defaultdict
 
 OUTPUT_FILE = "output_files/metrics_output.txt"
 
-# ---------------------------------------------------------------------
-#  FUNCTION: Parse execution.txt produced by your simulator
-# ---------------------------------------------------------------------
 def parse_execution(filename="execution.txt"):
     events = []
     line_pattern = re.compile(
@@ -25,9 +22,7 @@ def parse_execution(filename="execution.txt"):
     return events
 
 
-# ---------------------------------------------------------------------
-#  FUNCTION: Compute metrics
-# ---------------------------------------------------------------------
+
 def compute_metrics(events):
     processes = defaultdict(lambda: {
         "arrival": None,
@@ -41,7 +36,7 @@ def compute_metrics(events):
 
     active_pids = set()
 
-    # ------------------ Process events ------------------
+    #Process events
     for time, pid, old, new in events:
         active_pids.add(pid)
 
@@ -70,7 +65,7 @@ def compute_metrics(events):
         if new == "TERMINATED":
             processes[pid]["finish"] = time
 
-    # ------------------ Write output to file ------------------
+    #Write output to file
     with open(OUTPUT_FILE, "w") as out:
         out.write("===== METRICS REPORT =====\n")
 
@@ -118,9 +113,7 @@ def compute_metrics(events):
     print(f"\nMetrics saved to: {OUTPUT_FILE}\n")
 
 
-# ---------------------------------------------------------------------
-# MAIN CALL
-# ---------------------------------------------------------------------
+#Main call
 if __name__ == "__main__":
     events = parse_execution("execution.txt")
     compute_metrics(events)
