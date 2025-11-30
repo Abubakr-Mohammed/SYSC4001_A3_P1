@@ -22,7 +22,7 @@ Total Memory Used: 10
 Total Free Memory: 90
 Usable Memory: 90
 
-|                15 |  1 |   RUNNING |   WAITING |
+|                15 |  1 |   RUNNING |TERMINATED |
 |                20 |  2 |       NEW |     READY |
 |                20 |  2 |     READY |   RUNNING |
 
@@ -44,7 +44,7 @@ Total Memory Used: 25
 Total Free Memory: 75
 Usable Memory: 75
 
-|                35 |  2 |   RUNNING |   WAITING |
+|                35 |  2 |   RUNNING |TERMINATED |
 |                40 |  3 |       NEW |     READY |
 |                40 |  3 |     READY |   RUNNING |
 
@@ -66,5 +66,5 @@ Total Memory Used: 50
 Total Free Memory: 50
 Usable Memory: 50
 
-|                55 |  3 |   RUNNING |   WAITING |
+|                55 |  3 |   RUNNING |TERMINATED |
 +------------------------------------------------+
