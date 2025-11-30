@@ -106,5 +106,5 @@ Total Memory Used: 33
 Total Free Memory: 67
 Usable Memory: 67
 
-|               108 |  1 |   RUNNING |   WAITING |
+|               108 |  1 |   RUNNING | TERMINATED|
 +------------------------------------------------+
